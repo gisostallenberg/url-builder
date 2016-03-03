@@ -73,8 +73,6 @@ class UrlBuilder
     }
 
     /**
-     * reset.
-     *
      * Resets all internal properties
      */
     private function reset()
@@ -90,8 +88,6 @@ class UrlBuilder
     }
 
     /**
-     * valuesFromUrl.
-     *
      * Sets the individual properties using the given url
      *
      * @param string $url
@@ -107,8 +103,6 @@ class UrlBuilder
     }
 
     /**
-     * createFromGlobals.
-     *
      * Creates a new UrlBuilder using info in $_SERVER
      *
      * @return UrlBuilder
@@ -125,8 +119,6 @@ class UrlBuilder
     }
 
     /**
-     * createFromUrl.
-     *
      * Creates a new UrlBuilder using $url
      *
      * @param string $url
@@ -139,8 +131,6 @@ class UrlBuilder
     }
 
     /**
-     * createFromComponents.
-     *
      * Creates a new UrlBuilder using $components
      *
      * @param array $components
@@ -156,8 +146,6 @@ class UrlBuilder
     }
 
     /**
-     * setComponents.
-     *
      * Fills the values from an array of components
      *
      * @param array $components
@@ -177,8 +165,6 @@ class UrlBuilder
     }
 
     /**
-     * setScheme.
-     *
      * Sets the scheme value
      *
      * @param string $scheme
@@ -193,8 +179,6 @@ class UrlBuilder
     }
 
     /**
-     * setHost.
-     *
      * Sets the host value
      *
      * @param string $host
@@ -209,8 +193,6 @@ class UrlBuilder
     }
 
     /**
-     * setPort.
-     *
      * Sets the port value
      *
      * @param string $port
@@ -225,8 +207,6 @@ class UrlBuilder
     }
 
     /**
-     * setUser.
-     *
      * Sets the user value
      *
      * @param string $user
@@ -241,8 +221,6 @@ class UrlBuilder
     }
 
     /**
-     * setPass.
-     *
      * Sets the pass value
      *
      * @param string $pass
@@ -257,8 +235,6 @@ class UrlBuilder
     }
 
     /**
-     * setPath.
-     *
      * Sets the path value
      *
      * @param string $path
@@ -273,8 +249,6 @@ class UrlBuilder
     }
 
     /**
-     * setQuery.
-     *
      * Sets the query value
      *
      * @param array|string $query
@@ -293,8 +267,6 @@ class UrlBuilder
     }
 
     /**
-     * setFragment.
-     *
      * Sets the fragment value
      *
      * @param string $fragment
@@ -309,8 +281,6 @@ class UrlBuilder
     }
 
     /**
-     * getScheme.
-     *
      * Returns the scheme value
      *
      * @return string
@@ -321,8 +291,6 @@ class UrlBuilder
     }
 
     /**
-     * getHost.
-     *
      * Returns the host value
      *
      * @return string
@@ -333,8 +301,6 @@ class UrlBuilder
     }
 
     /**
-     * getPort.
-     *
      * Returns the port value
      *
      * @return string
@@ -345,8 +311,6 @@ class UrlBuilder
     }
 
     /**
-     * getUsre.
-     *
      * Returns the user value
      *
      * @return string
@@ -357,8 +321,6 @@ class UrlBuilder
     }
 
     /**
-     * getPass.
-     *
      * Returns the pass value
      *
      * @return string
@@ -369,8 +331,6 @@ class UrlBuilder
     }
 
     /**
-     * getPath.
-     *
      * Returns the path value
      *
      * @return string
@@ -381,8 +341,6 @@ class UrlBuilder
     }
 
     /**
-     * getQuery.
-     *
      * Returns the query value
      *
      * @return array
@@ -393,8 +351,6 @@ class UrlBuilder
     }
 
     /**
-     * getFragment.
-     *
      * Returns the fragment value
      *
      * @return string
@@ -405,8 +361,6 @@ class UrlBuilder
     }
 
     /**
-     * getComponents.
-     *
      * Gives an array with all the components of this url, leaves out empty values
      *
      * return array
@@ -443,8 +397,6 @@ class UrlBuilder
     }
 
     /**
-     * appendToQuery.
-     *
      * Appends a value to the query
      *
      * @param string $key
@@ -464,8 +416,6 @@ class UrlBuilder
     }
 
     /**
-     * unsetInQuery.
-     *
      * Unsets a value in the query, does not check or complain about presence
      * If $value is given only unsets if value is the same
      *
@@ -484,8 +434,6 @@ class UrlBuilder
     }
 
     /**
-     * getUrl.
-     *
      * Gives the url
      *
      * @return string
@@ -496,8 +444,6 @@ class UrlBuilder
     }
 
     /**
-     * __toString.
-     *
      * Transforms this object into a string
      *
      * @return string
@@ -508,8 +454,6 @@ class UrlBuilder
     }
 
     /**
-     * joinUrl.
-     *
      * Got the code for this method from http://nadeausoftware.com/articles/2008/05/php_tip_how_parse_and_build_urls#Downloads
      * OSI BSD license
      *
