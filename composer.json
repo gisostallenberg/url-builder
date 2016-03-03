@@ -1,0 +1,20 @@
+{
+    "name": "gisostallenberg/url-builder",
+    "description": "Builds URL's the way pecl_http does this",
+    "type": "library",
+    "require": {
+        "php": "^5.3.9"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Giso Stallenberg",
+            "email": "gisostallenberg@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "GisoStallenberg\\UrlBuilder\\": "src/"
+        }
+    }
+}
