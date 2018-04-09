@@ -3,7 +3,7 @@
     "description": "Builds URL's the way pecl_http does this",
     "type": "library",
     "require": {
-        "php": "^5.3.9"
+        "php": "^5.3.9 || ^7.0.0"
     },
     "license": "MIT",
     "authors": [
