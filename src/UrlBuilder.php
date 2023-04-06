@@ -2,70 +2,28 @@
 
 namespace GisoStallenberg\UrlBuilder;
 
-class UrlBuilder
+final class UrlBuilder implements \Stringable
 {
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $scheme;
+    private ?string $scheme = null;
+
+    private ?string $host = null;
+
+    private ?string $port = null;
+
+    private ?string $user = null;
+
+    private ?string $pass = null;
+
+    private ?string $path = null;
 
     /**
-     * The scheme.
-     *
-     * @var string
+     * @var array<string, mixed>
      */
-    private $host;
+    private array $query = [];
 
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $port;
+    private ?string $fragment = null;
 
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $user;
-
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $pass;
-
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $path;
-
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $query = array();
-
-    /**
-     * The scheme.
-     *
-     * @var string
-     */
-    private $fragment;
-
-    /**
-     * Create a new instance of an UrlBuilder.
-     *
-     * @param type $url
-     */
-    public function __construct($url = null)
+    public function __construct(string $url = null)
     {
         if (isset($url)) {
             $this->valuesFromUrl($url);
@@ -75,7 +33,7 @@ class UrlBuilder
     /**
      * Resets all internal properties
      */
-    private function reset()
+    private function reset(): self
     {
         $this->scheme = null;
         $this->host = null;
@@ -83,49 +41,40 @@ class UrlBuilder
         $this->user = null;
         $this->pass = null;
         $this->path = null;
-        $this->query = array();
+        $this->query = [];
         $this->fragment = null;
-    }
-
-    /**
-     * Sets the individual properties using the given url
-     *
-     * @param string $url
-     *
-     * @return UrlBuilder
-     */
-    public function valuesFromUrl($url)
-    {
-        $this->reset();
-        $this->setComponents((array) parse_url($url));
 
         return $this;
     }
 
     /**
-     * Creates a new UrlBuilder using info in $_SERVER
-     *
-     * @return UrlBuilder
+     * Sets the individual properties using the given url
      */
-    public static function createFromGlobals()
+    public function valuesFromUrl(string $url): self
+    {
+        return $this
+            ->reset()
+            ->setComponents((array) \parse_url($url));
+    }
+
+    /**
+     * Creates a new UrlBuilder using info in $_SERVER
+     */
+    public static function createFromGlobals(): self
     {
         $url = 'http';
         $url .= isset($_SERVER['HTTPS']) ? 's' : ''; // do not check for ssl termination, this should not be done in UrlBuilder, use setScheme to correct the scheme in case of SSL termination
         $url .= '://';
-        $url .= isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
-        $url .= isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        $url .= $_SERVER['HTTP_HOST'] ?? '';
+        $url .= $_SERVER['REQUEST_URI'] ?? '';
 
         return static::createFromUrl($url);
     }
 
     /**
      * Creates a new UrlBuilder using $url
-     *
-     * @param string $url
-     *
-     * @return UrlBuilder
      */
-    public static function createFromUrl($url)
+    public static function createFromUrl(string $url): self
     {
         return new UrlBuilder($url);
     }
@@ -133,115 +82,64 @@ class UrlBuilder
     /**
      * Creates a new UrlBuilder using $components
      *
-     * @param array $components
-     *
-     * @return UrlBuilder
+     * @param array<int|string, bool|int|string> $components
      */
-    public static function createFromComponents(array $components)
+    public static function createFromComponents(array $components): self
     {
-        $urlbuilder = new UrlBuilder();
-        $urlbuilder->setComponents($components);
-
-        return $urlbuilder;
+        return (new UrlBuilder())->setComponents($components);
     }
 
     /**
      * Fills the values from an array of components
      *
-     * @param array $components
-     *
-     * @return UrlBuilder
+     * @param array<int|string, bool|int|string> $components
      */
-    public function setComponents(array $components)
+    public function setComponents(array $components): self
     {
         foreach ($components as $key => $value) {
-            if (!empty($value)) {
-                $setter = 'set'.ucfirst($key);
-                $this->$setter($value);
-            }
+            $setter = \sprintf('set%s', \ucfirst((string) $key));
+            $this->{$setter}($value);
         }
 
         return $this;
     }
 
-    /**
-     * Sets the scheme value
-     *
-     * @param string $scheme
-     *
-     * @return UrlBuilder
-     */
-    public function setScheme($scheme)
+    public function setScheme(?string $scheme): self
     {
         $this->scheme = $scheme;
 
         return $this;
     }
 
-    /**
-     * Sets the host value
-     *
-     * @param string $host
-     *
-     * @return UrlBuilder
-     */
-    public function setHost($host)
+    public function setHost(?string $host): self
     {
         $this->host = $host;
 
         return $this;
     }
 
-    /**
-     * Sets the port value
-     *
-     * @param string $port
-     *
-     * @return UrlBuilder
-     */
-    public function setPort($port)
+    public function setPort(?string $port): self
     {
         $this->port = $port;
 
         return $this;
     }
 
-    /**
-     * Sets the user value
-     *
-     * @param string $user
-     *
-     * @return UrlBuilder
-     */
-    public function setUser($user)
+    public function setUser(?string $user): self
     {
         $this->user = $user;
 
         return $this;
     }
 
-    /**
-     * Sets the pass value
-     *
-     * @param string $pass
-     *
-     * @return UrlBuilder
-     */
-    public function setPass($pass)
+    public function setPass(?string $pass): self
     {
         $this->pass = $pass;
 
         return $this;
     }
 
-    /**
-     * Sets the path value
-     *
-     * @param string $path
-     *
-     * @return UrlBuilder
-     */
-    public function setPath($path)
+    public function setPath(?string $path): self
     {
         $this->path = $path;
 
@@ -249,113 +147,65 @@ class UrlBuilder
     }
 
     /**
-     * Sets the query value
-     *
-     * @param array|string $query
-     *
-     * @return UrlBuilder
+     * @param array<string, mixed>|string|null $query
      */
-    public function setQuery($query)
+    public function setQuery(array|string|null $query): self
     {
-        if (is_string($query)) {
-            parse_str($query, $this->query);
-        } elseif (is_array($query)) {
-            $this->query = $query;
+        if (\is_string($query)) {
+            \parse_str($query, $this->query);
+        } else {
+            $this->query = $query ?? [];
         }
 
         return $this;
     }
 
-    /**
-     * Sets the fragment value
-     *
-     * @param string $fragment
-     *
-     * @return UrlBuilder
-     */
-    public function setFragment($fragment)
+    public function setFragment(?string $fragment): self
     {
         $this->fragment = $fragment;
 
         return $this;
     }
 
-    /**
-     * Returns the scheme value
-     *
-     * @return string
-     */
-    public function getScheme()
+    public function getScheme(): ?string
     {
         return $this->scheme;
     }
 
-    /**
-     * Returns the host value
-     *
-     * @return string
-     */
-    public function getHost()
+    public function getHost(): ?string
     {
         return $this->host;
     }
 
-    /**
-     * Returns the port value
-     *
-     * @return string
-     */
-    public function getPort()
+    public function getPort(): ?string
     {
         return $this->port;
     }
 
-    /**
-     * Returns the user value
-     *
-     * @return string
-     */
-    public function getUser()
+    public function getUser(): ?string
     {
         return $this->user;
     }
 
-    /**
-     * Returns the pass value
-     *
-     * @return string
-     */
-    public function getPass()
+    public function getPass(): ?string
     {
         return $this->pass;
     }
 
-    /**
-     * Returns the path value
-     *
-     * @return string
-     */
-    public function getPath()
+    public function getPath(): ?string
     {
         return $this->path;
     }
 
     /**
-     * Returns the query value
-     *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getQuery()
+    public function getQuery(): array
     {
         return $this->query;
     }
 
-    /**
-     * Returns the fragment value
-     *
-     * @return string
-     */
-    public function getFragment()
+    public function getFragment(): ?string
     {
         return $this->fragment;
     }
@@ -363,11 +213,11 @@ class UrlBuilder
     /**
      * Gives an array with all the components of this url, leaves out empty values
      *
-     * return array
+     * @return array<string, mixed>
      */
-    public function getComponents()
+    public function getComponents(): array
     {
-        $components = array();
+        $components = [];
         if (!empty($this->scheme)) {
             $components['scheme'] = $this->scheme;
         }
@@ -396,17 +246,9 @@ class UrlBuilder
         return $components;
     }
 
-    /**
-     * Appends a value to the query
-     *
-     * @param string $key
-     * @param mixed  $value
-     *
-     * @return UrlBuilder
-     */
-    public function appendToQuery($key, $value)
+    public function appendToQuery(string $key, mixed $value): self
     {
-        if (isset($this->query[$key]) && is_array($this->query[$key])) {
+        if (isset($this->query[$key]) && \is_array($this->query[$key])) {
             $this->query[$key][] = $value;
         } else {
             $this->query[$key] = $value;
@@ -418,13 +260,8 @@ class UrlBuilder
     /**
      * Unsets a value in the query, does not check or complain about presence
      * If $value is given only unsets if value is the same
-     *
-     * @param string $key
-     * @param mixed  $value
-     *
-     * @return UrlBuilder
      */
-    public function unsetInQuery($key, $value = false)
+    public function unsetInQuery(string $key, mixed $value = false): self
     {
         if ($value === false || (isset($this->query[$key]) && $this->query[$key] == $value)) {
             unset($this->query[$key]);
@@ -434,21 +271,17 @@ class UrlBuilder
     }
 
     /**
-     * Gives the url
-     *
-     * @return string
+     * Gives the url as string
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         return static::joinUrl($this->getComponents());
     }
 
     /**
      * Transforms this object into a string
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->getUrl();
     }
@@ -457,35 +290,32 @@ class UrlBuilder
      * Got the code for this method from http://nadeausoftware.com/articles/2008/05/php_tip_how_parse_and_build_urls#Downloads
      * OSI BSD license
      *
-     * @param array $parts
-     * @param bool  $encodeUrl
-     *
-     * @return string
+     * @param array<string, mixed> $parts
      */
-    public static function joinUrl(array $parts, $encodeUrl = false)
+    public static function joinUrl(array $parts, bool $encodeUrl = false): string
     {
-        if (isset($parts['query']) && is_array($parts['query'])) {
-            $parts['query'] = http_build_query($parts['query']);
+        if (isset($parts['query']) && \is_array($parts['query'])) {
+            $parts['query'] = \http_build_query($parts['query']);
         }
 
         if ($encodeUrl) {
             if (isset($parts['user'])) {
-                $parts['user'] = rawurlencode($parts['user']);
+                $parts['user'] = \rawurlencode((string) $parts['user']);
             }
             if (isset($parts['pass'])) {
-                $parts['pass'] = rawurlencode($parts['pass']);
+                $parts['pass'] = \rawurlencode((string) $parts['pass']);
             }
-            if (isset($parts['host']) &&  !preg_match('!^(\[[\da-f.:]+\]])|([\da-f.:]+)$!ui', $parts['host'])) {
-                $parts['host'] = rawurlencode($parts['host']);
+            if (isset($parts['host']) &&  !\preg_match('!^(\[[\da-f.:]+\]])|([\da-f.:]+)$!ui', (string) $parts['host'])) {
+                $parts['host'] = \rawurlencode((string) $parts['host']);
             }
             if (!empty($parts['path'])) {
-                $parts['path'] = preg_replace('!%2F!ui', '/', rawurlencode($parts['path']));
+                $parts['path'] = \preg_replace('!%2F!ui', '/', \rawurlencode((string) $parts['path']));
             }
             if (isset($parts['query'])) {
-                $parts['query'] = rawurlencode($parts['query']);
+                $parts['query'] = \rawurlencode((string) $parts['query']);
             }
             if (isset($parts['fragment'])) {
-                $parts['fragment'] = rawurlencode($parts['fragment']);
+                $parts['fragment'] = \rawurlencode((string) $parts['fragment']);
             }
         }
 
@@ -502,7 +332,7 @@ class UrlBuilder
                 }
                 $url .= '@';
             }
-            if (preg_match('!^[\da-f]*:[\da-f.:]+$!ui', $parts['host'])) {
+            if (\preg_match('!^[\da-f]*:[\da-f.:]+$!ui', (string) $parts['host'])) {
                 $url .= '['.$parts['host'].']'; // IPv6
             } else {
                 $url .= $parts['host']; // IPv4 or name
