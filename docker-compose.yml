@@ -1,0 +1,10 @@
+services:
+  test:
+    build: .
+    volumes:
+      - .:/app
+      - composer-cache:/root/.composer
+    command: sh -c "composer install --no-interaction && vendor/bin/phpunit"
+
+volumes:
+  composer-cache:

@@ -2,6 +2,8 @@
 
 namespace GisoStallenberg\UrlBuilder;
 
+use Uri\Rfc3986\Uri;
+
 final class UrlBuilder implements \Stringable
 {
     private ?string $scheme = null;
@@ -23,7 +25,7 @@ final class UrlBuilder implements \Stringable
 
     private ?string $fragment = null;
 
-    public function __construct(string $url = null)
+    public function __construct(?string $url = null)
     {
         if (isset($url)) {
             $this->valuesFromUrl($url);
@@ -52,9 +54,56 @@ final class UrlBuilder implements \Stringable
      */
     public function valuesFromUrl(string $url): self
     {
-        return $this
-            ->reset()
-            ->setComponents((array) \parse_url($url));
+        $this->reset();
+
+        // ponytail: the query is parsed separately below, so strip it before
+        // handing the URL to Uri::parse. Uri is RFC 3986-strict and rejects the
+        // whole URL outright when the query holds unencoded chars (e.g. a[]=1),
+        // which PHP apps routinely produce.
+        $uri = Uri::parse($this->withoutQuery($url));
+        if ($uri === null) {
+            throw new \InvalidArgumentException(\sprintf('Malformed URL: %s', $url));
+        }
+
+        $this->scheme = $uri->getScheme();
+        $this->host = $uri->getHost();
+        $this->port = $uri->getPort() === null ? null : (string) $uri->getPort();
+        $this->user = $uri->getUsername();
+        $this->pass = $uri->getPassword();
+        $this->path = $uri->getPath() === '' ? null : $uri->getPath();
+        $this->fragment = $uri->getFragment();
+
+        // ponytail: query kept as a PHP array via parse_str/http_build_query, not
+        // via Uri's query getter, which is RFC 3986-strict and silently drops the
+        // a[]=1&a[]=2 style PHP apps rely on. Slice it out ourselves instead.
+        $this->setQuery($this->extractQuery($url));
+
+        return $this;
+    }
+
+    private function extractQuery(string $url): string
+    {
+        $start = \strpos($url, '?');
+        if ($start === false) {
+            return '';
+        }
+
+        $query = \substr($url, $start + 1);
+        $end = \strpos($query, '#');
+
+        return $end === false ? $query : \substr($query, 0, $end);
+    }
+
+    private function withoutQuery(string $url): string
+    {
+        $start = \strpos($url, '?');
+        if ($start === false) {
+            return $url;
+        }
+
+        $fragment = \strpos($url, '#', $start);
+
+        return \substr($url, 0, $start) . ($fragment === false ? '' : \substr($url, $fragment));
     }
 
     /**
@@ -271,11 +320,66 @@ final class UrlBuilder implements \Stringable
     }
 
     /**
-     * Gives the url as string
+     * Gives the url as string, built with the native Uri extension
      */
     public function getUrl(): string
     {
-        return static::joinUrl($this->getComponents());
+        $uri = new Uri('');
+
+        if (!empty($this->scheme)) {
+            $uri = $uri->withScheme($this->scheme);
+        }
+
+        $hasHost = !empty($this->host);
+        if ($hasHost) {
+            $uri = $uri->withHost($this->host);
+
+            // Uri rejects userinfo/port without a host, mirroring the old builder
+            // which only emitted them inside the authority.
+            if (!empty($this->user)) {
+                $userInfo = $this->user;
+                if ($this->pass !== null) {
+                    $userInfo .= ':' . $this->pass;
+                }
+                $uri = $uri->withUserInfo($userInfo);
+            }
+            if (!empty($this->port)) {
+                $uri = $uri->withPort((int) $this->port);
+            }
+        }
+
+        if (!empty($this->path)) {
+            $path = $this->path;
+            if ($hasHost && $path[0] !== '/') {
+                $path = '/' . $path;
+            }
+            $uri = $uri->withPath($path);
+        }
+
+        if ($this->query !== []) {
+            $uri = $uri->withQuery(\http_build_query($this->query));
+        }
+
+        if (!empty($this->fragment)) {
+            $uri = $uri->withFragment($this->fragment);
+        }
+
+        return $uri->toString();
+    }
+
+    /**
+     * Builds a URL from a parse_url()-style components array.
+     *
+     * ponytail: kept for backwards compatibility, delegating to the native
+     * build. The $encodeUrl flag is now a no-op — Uri always percent-encodes
+     * per RFC 3986, so there is no separate raw/encoded output to toggle. Drop
+     * the parameter on the next major if nothing passes it.
+     *
+     * @param array<string, mixed> $parts
+     */
+    public static function joinUrl(array $parts, bool $encodeUrl = false): string
+    {
+        return self::createFromComponents($parts)->getUrl();
     }
 
     /**
@@ -284,76 +388,5 @@ final class UrlBuilder implements \Stringable
     public function __toString(): string
     {
         return $this->getUrl();
-    }
-
-    /**
-     * Got the code for this method from http://nadeausoftware.com/articles/2008/05/php_tip_how_parse_and_build_urls#Downloads
-     * OSI BSD license
-     *
-     * @param array<string, mixed> $parts
-     */
-    public static function joinUrl(array $parts, bool $encodeUrl = false): string
-    {
-        if (isset($parts['query']) && \is_array($parts['query'])) {
-            $parts['query'] = \http_build_query($parts['query']);
-        }
-
-        if ($encodeUrl) {
-            if (isset($parts['user'])) {
-                $parts['user'] = \rawurlencode((string) $parts['user']);
-            }
-            if (isset($parts['pass'])) {
-                $parts['pass'] = \rawurlencode((string) $parts['pass']);
-            }
-            if (isset($parts['host']) &&  !\preg_match('!^(\[[\da-f.:]+\]])|([\da-f.:]+)$!ui', (string) $parts['host'])) {
-                $parts['host'] = \rawurlencode((string) $parts['host']);
-            }
-            if (!empty($parts['path'])) {
-                $parts['path'] = \preg_replace('!%2F!ui', '/', \rawurlencode((string) $parts['path']));
-            }
-            if (isset($parts['query'])) {
-                $parts['query'] = \rawurlencode((string) $parts['query']);
-            }
-            if (isset($parts['fragment'])) {
-                $parts['fragment'] = \rawurlencode((string) $parts['fragment']);
-            }
-        }
-
-        $url = '';
-        if (!empty($parts['scheme'])) {
-            $url .= $parts['scheme'].':';
-        }
-        if (isset($parts['host'])) {
-            $url .= '//';
-            if (isset($parts['user'])) {
-                $url .= $parts['user'];
-                if (isset($parts['pass'])) {
-                    $url .= ':'.$parts['pass'];
-                }
-                $url .= '@';
-            }
-            if (\preg_match('!^[\da-f]*:[\da-f.:]+$!ui', (string) $parts['host'])) {
-                $url .= '['.$parts['host'].']'; // IPv6
-            } else {
-                $url .= $parts['host']; // IPv4 or name
-            }
-            if (isset($parts['port'])) {
-                $url .= ':'.$parts['port'];
-            }
-            if (!empty($parts['path']) && $parts['path'][0] != '/') {
-                $url .= '/';
-            }
-        }
-        if (!empty($parts['path'])) {
-            $url .= $parts['path'];
-        }
-        if (isset($parts['query'])) {
-            $url .= '?'.$parts['query'];
-        }
-        if (isset($parts['fragment'])) {
-            $url .= '#'.$parts['fragment'];
-        }
-
-        return $url;
     }
 }

@@ -3,7 +3,11 @@
     "description": "Builds URL's the way pecl_http does this",
     "type": "library",
     "require": {
-        "php": "^8.1"
+        "php": "^8.5",
+        "ext-uri": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12"
     },
     "license": "MIT",
     "authors": [
@@ -15,6 +19,11 @@
     "autoload": {
         "psr-4": {
             "GisoStallenberg\\UrlBuilder\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GisoStallenberg\\UrlBuilder\\Tests\\": "tests/"
         }
     }
 }
