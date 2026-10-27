@@ -130,6 +130,14 @@ final class UrlBuilderTest extends TestCase
         );
     }
 
+    public function testJoinUrlBuildsFromComponents(): void
+    {
+        $this->assertSame(
+            'https://example.com/x?a=1',
+            UrlBuilder::joinUrl(['scheme' => 'https', 'host' => 'example.com', 'path' => '/x', 'query' => ['a' => '1']]),
+        );
+    }
+
     public function testCreateFromGlobals(): void
     {
         $_SERVER['HTTP_HOST'] = 'example.com';
